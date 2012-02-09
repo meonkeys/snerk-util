@@ -9,6 +9,13 @@
 
 # Usage: multistatus UserBundle TestUtilBundle
 
+verbose=false
+if [[ "$1" == "-v" ]]
+then
+    verbose=true
+    shift
+fi
+
 for clone in "$@"
 do
     origdir=`pwd`
@@ -17,20 +24,18 @@ do
     diverged=`grep -i 'have diverged' <<< $status`
     outofsync=`grep -i 'your branch is' <<< $status`
     unstaged=`grep -i 'changes not staged' <<< $status`
+    untracked=`grep -i 'untracked file' <<< $status`
+    uncommitted=`grep -i 'changes to be' <<< $status`
 
-    if [[ -n "$diverged" ]]
+    if [[ $verbose == true && ( -n "$diverged" || -n "$outofsync" || -n "$unstaged" || -n "$untracked" || -n "$uncommitted") ]]
     then
-        echo "$clone - diverged from upstream"
-    fi
-
-    if [[ -n "$outofsync" ]]
-    then
-        echo "$clone - not in sync with upstream"
-    fi
-
-    if [[ -n "$unstaged" ]]
-    then
-        echo "$clone - uncommitted changes"
+        echo "# MULTISTATUS - $clone"
+        git status
+    else
+        if [[ -n "$diverged" || -n "$outofsync" || -n "$unstaged" || -n "$untracked" || -n "$uncommitted" ]]
+        then
+            echo $clone
+        fi
     fi
 
     builtin cd "$origdir"
