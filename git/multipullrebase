@@ -13,12 +13,12 @@ origdir=`pwd`
 for clone in "$@"
 do
     echo `basename $clone`
-    builtin cd "$clone"
+    cd "$clone"
 
     git pull --rebase
     [[ $? -ne 0 ]] && exit $?
 
-    builtin cd "$origdir"
+    cd "$origdir"
 done
 
 # "MIT" (Expat) license:
