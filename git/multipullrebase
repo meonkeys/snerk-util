@@ -12,6 +12,7 @@
 origdir=`pwd`
 for clone in "$@"
 do
+    echo `basename $clone`
     builtin cd "$clone"
 
     git pull --rebase
