@@ -12,6 +12,7 @@
 export GIT_PAGER=''
 origdir=`pwd`
 echo "# **** MULTIDIFF ***"
+echo "# vim: ft=gitcommit"
 for clone in "$@"
 do
     builtin cd "$clone"
