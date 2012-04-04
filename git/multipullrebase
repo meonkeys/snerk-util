@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Copyright (C) 2012 Adam Monsen <haircut@gmail.com>
-# License: MIT License (same as Symfony2 itself). See end of script for more
-# license information.
+# License: MIT License. See end of script for more license information.
 
 # For 1 to n directories with git clones, "git pull --rebase".
 # Bail out if rebase cannot be automatically completed.
