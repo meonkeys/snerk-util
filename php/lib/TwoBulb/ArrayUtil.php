@@ -45,22 +45,10 @@ class ArrayUtil {
       return $arr;
     }
 
-    $new = array();
-    unset($arr[$itemOldIndex]);
+    $removed = array_splice($arr, $itemOldIndex, 1);
+    array_splice($arr, $position, 0, $removed);
 
-    if ($position === 0) {
-      $new = array_merge(array($item), array_slice($arr, 0));
-    } elseif ($position === ($arrCount-1)) {
-      $new = array_merge(array_slice($arr, 0), array($item));
-    } else {
-      $new = array_merge(
-          array_slice($arr, 0, $position),
-          array($item),
-          array_slice($arr, $position)
-          );
-    }
-
-    return $new;
+    return $arr;
   }
 }
 
