@@ -1,0 +1,75 @@
+#!/usr/bin/php
+<?php
+
+# Record and report to Trac the latest commits in a git clone.
+
+# This makes it possible to point Trac at a repository hosted
+# elsewhere but mirrored locally. Generally git repositories
+# must exist on the same server and have a post-receive hook
+# to notify Trac. I call this from Jenkins build jobs where
+# the workspace is a remote-hosted git repository.
+
+# INSTALLATION:
+# 1. install this script as /usr/local/bin/gitTracCloneWatcher
+#
+# 2. create /usr/local/bin/tracAdminChangesetAdded by hand with the contents:
+#
+#     exec /usr/local/bin/trac-admin /var/local/trac changeset added $*
+#
+# 3. add to /etc/sudoers something like
+#
+#     Cmnd_Alias TRACADMINCHANGESETADDED = /usr/local/bin/tracAdminChangesetAdded
+#     jenkins ALL = (trac-user) NOPASSWD: TRACADMINCHANGESETADDED
+#
+# 4. call this script from Jenkins builds. For example:
+#
+#     make
+#     /usr/local/bin/gitTracCloneWatcher $JOB_NAME $WORKSPACE
+
+$db = '/var/local/lib/gitLastCommits';
+if (count($argv) < 3) {
+    echo "Usage: $argv[0] REPO_NAME REPO_PATH".PHP_EOL;
+    exit(1);
+}
+$repo = $argv[1];
+$path = $argv[2];
+
+function dieNice($msg) {
+    echo $msg.PHP_EOL;
+    exit(1);
+}
+
+function runShell($cmd) {
+    exec($cmd, $output, $status);
+    if ($status != 0) dieNice(__FUNCTION__." ERROR: '$cmd' failed.");
+    return $output;
+}
+
+function findCurrentHash($repoPath) {
+    $cmd = "cd $repoPath && git rev-list --max-count=1 HEAD";
+    $output = runShell($cmd);
+    if (!preg_match('/^[0-9a-f]{40}$/', $output[0])) dieNice(__FUNCTION__." ERROR.");
+    return $output[0];
+}
+
+function lastSavedCommitHash($repoPath) {
+    return trim(file_get_contents("$repoPath"));
+}
+
+function saveCommitHash($loc, $hash) {
+    file_put_contents("$loc", $hash.PHP_EOL);
+}
+
+$savedHashFile = "$db/$repo";
+if(!file_exists($savedHashFile)) {
+    saveCommitHash($savedHashFile, findCurrentHash($path));
+}
+$old = lastSavedCommitHash($savedHashFile);
+$new = findCurrentHash($path);
+if ($old == $new) {
+    exit(0);
+}
+$commitsList = runShell("cd $path && git rev-list $new ^$old");
+$commits = implode(" ", $commitsList);
+runShell("sudo -u www-data /usr/local/bin/tracAdminChangesetAdded $repo $commits");
+saveCommitHash($savedHashFile, $new);
