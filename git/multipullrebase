@@ -15,7 +15,8 @@ do
     cd "$clone"
 
     git pull --rebase
-    [[ $? -ne 0 ]] && exit $?
+    rv=$?
+    [[ $rv -ne 0 ]] && exit $rv
 
     cd "$origdir"
 done
